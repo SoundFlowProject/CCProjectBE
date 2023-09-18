@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @app.route('/')
 @app.route('/home')
-def home():
+def home(id):
     """Renders the home page."""
     bucket_name = 'soundflow-songs'
     object_name_history = 'history.csv'
@@ -27,9 +27,13 @@ def home():
     df_history = download_from_s3(s3, bucket_name, object_name_history)
     df_data = download_from_s3(s3, bucket_name, object_name_data)
 
-    join_df = df_history.merge(df_data, left_on='songId', right_on='id', how='inner').rename(columns={'name': 'Title', 'artists': 'Artist(s)'})[['Date', 'Text', 'Title', 'Artist(s)']]
+    join_df = df_history.merge(df_data, left_on='songId', right_on='id', how='inner')
+    filtered_df = join_df
+    if(id!=None):
+        filtered_df = join_df.where(join_df["userId"]==id)
+    final_df = filtered_df.rename(columns={'name': 'Title', 'artists': 'Artist(s)'})[['Date', 'Text', 'Title', 'Artist(s)']]
 
-    return json(join_df)
+    return json(final_df)
 
 
 def download_from_s3(s3, bucket_name, object_name):
