@@ -6,7 +6,7 @@ import json
 
 import boto3
 import pandas as pd
-from flask import Flask
+from flask import Flask, make_response
 
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def default():
 
 
 @app.route('/home')
-def home(id):
+def home(id=None):
     """Renders the home page."""
     bucket_name = 'soundflow-songs'
     object_name_history = 'history.csv'
@@ -25,19 +25,26 @@ def home(id):
     aws_access_key = 'AKIAZ3EZAPNJIHQH5HYC'
     aws_secret_key = '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'
 
-    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+    s3 = boto3.client('s3')
 
     df_history = download_from_s3(s3, bucket_name, object_name_history)
     df_data = download_from_s3(s3, bucket_name, object_name_data)
 
     join_df = df_history.merge(df_data, left_on='songId', right_on='id', how='inner')
     filtered_df = join_df
-    if (id != None):
+    if id is not None:
         filtered_df = join_df.where(join_df["userId"] == id)
     final_df = filtered_df.rename(columns={'name': 'Title', 'artists': 'Artist(s)'})[
         ['Date', 'Text', 'Title', 'Artist(s)']]
 
-    return json(final_df)
+    # Convert the DataFrame to JSON
+    df_json = final_df.to_json(orient='records')
+
+    # Create a Flask response with JSON content type
+    response = make_response(df_json)
+    response.headers['Content-Type'] = 'application/json'
+
+    return response
 
 
 def download_from_s3(s3, bucket_name, object_name):
