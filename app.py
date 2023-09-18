@@ -3,12 +3,13 @@
 Routes and views for the flask application.
 """
 
-from datetime import datetime
-from flask import render_template
-from FlaskWebProject2 import app
+from flask import Flask
+
 import boto3, botocore
 import pandas as pd
 import json
+
+app = Flask(__name__)
 
 
 @app.route('/')
@@ -28,12 +29,7 @@ def home():
 
     join_df = df_history.merge(df_data, left_on='songId', right_on='id', how='inner').rename(columns={'name': 'Title', 'artists': 'Artist(s)'})[['Date', 'Text', 'Title', 'Artist(s)']]
 
-    return render_template(
-        'index.html',
-        title='Home Page',
-        df=join_df,
-        year=datetime.now().year,
-    )
+    return json(join_df)
 
 
 def download_from_s3(s3, bucket_name, object_name):
@@ -48,9 +44,7 @@ def download_from_s3(s3, bucket_name, object_name):
     except Exception as e:  
         print('ERROR: ', e)
 
-app = Flask(__name__)
+
 
 if __name__ == '__main__':
     app.run(port=8080)
-
-
