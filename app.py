@@ -24,10 +24,7 @@ def home(id=None):
     object_name_history = 'history.csv'
     object_name_data = 'data.csv'
     
-    aws_access_key='AKIATRXEU3ZEZF5UZIEG'
-    aws_secret_key='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'
-
-    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+    s3 = boto3.client('s3')
 
     df_history = download_from_s3(s3, bucket_name, object_name_history)
     df_data = download_from_s3(s3, bucket_name, object_name_data)
