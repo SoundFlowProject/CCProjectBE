@@ -19,11 +19,9 @@ def default():
 @app.route('/home')
 def home(id=None):
     """Renders the home page."""
-    bucket_name = 'soundflow-songs'
+    bucket_name = 'soundflow-songs-bucket'
     object_name_history = 'history.csv'
     object_name_data = 'data.csv'
-    aws_access_key = 'AKIAZ3EZAPNJIHQH5HYC'
-    aws_secret_key = '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'
 
     s3 = boto3.client('s3')
 
