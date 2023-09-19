@@ -6,24 +6,28 @@ import json
 
 import boto3
 import pandas as pd
-from flask import Flask, make_response
+from flask import Flask, make_response, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/')
 def default():
     return 'helloo'
 
 
-@app.route('/home')
+@app.route('/home', methods=['GET'])
 def home(id=None):
     """Renders the home page."""
     bucket_name = 'soundflow-songs-bucket'
     object_name_history = 'history.csv'
     object_name_data = 'data.csv'
+    
+    aws_access_key='AKIATRXEU3ZEZF5UZIEG'
+    aws_secret_key='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'
 
-    s3 = boto3.client('s3')
+    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
 
     df_history = download_from_s3(s3, bucket_name, object_name_history)
     df_data = download_from_s3(s3, bucket_name, object_name_data)
@@ -39,11 +43,15 @@ def home(id=None):
     df_json = final_df.to_json(orient='records')
 
     # Create a Flask response with JSON content type
-    response = make_response(df_json)
-    response.headers['Content-Type'] = 'application/json'
+    response = jsonify(df_json)
+    response.headers.add('Content-Type', 'application/json')
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
 
+@app.route('/home', methods=['OPTIONS'])
+def options():
+    return '', 204, {'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': '*'}
 
 def download_from_s3(s3, bucket_name, object_name):
     try:
